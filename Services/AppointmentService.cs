@@ -70,7 +70,7 @@ public class AppointmentService : IAppointmentService
                     WHERE a.IdAppointment = @IdAppointment;
                     """;
         await using var command = new SqlCommand(query, connection);
-        command.Parameters.AddWithValue("@IDAppointment", idAppointment);
+        command.Parameters.AddWithValue("@IdAppointment", idAppointment);
         
         await using var reader = await command.ExecuteReaderAsync();
         if (!await reader.ReadAsync())
@@ -84,7 +84,7 @@ public class AppointmentService : IAppointmentService
             , AppointmentDate = reader.GetDateTime(reader.GetOrdinal("AppointmentDate"))
             , Status = reader.GetString(reader.GetOrdinal("Status"))
             , Reason = reader.GetString(reader.GetOrdinal("Reason"))
-            , InternalNotes = reader.GetString(reader.GetOrdinal("InternalNotes"))
+            , InternalNotes = reader.IsDBNull(reader.GetOrdinal("InternalNotes")) ? null : reader.GetString(reader.GetOrdinal("InternalNotes"))
             , CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
             , PatientFullName = reader.GetString(reader.GetOrdinal("PatientFullName"))
             , PatientEmail = reader.GetString(reader.GetOrdinal("PatientEmail"))
@@ -121,6 +121,7 @@ public class AppointmentService : IAppointmentService
 
         var query = """
                     INSERT INTO dbo.Appointments (IdPatient, IdDoctor, AppointmentDate, Status, Reason)
+                    OUTPUT INSERTED.IdAppointment
                     VALUES (@IdPatient, @IdDoctor, @AppointmentDate, 'Scheduled',@Reason)
                     """;
         await using var command = new SqlCommand(query, connection);
@@ -251,7 +252,7 @@ public class AppointmentService : IAppointmentService
         await using var cmd = new SqlCommand(query, connection);
         cmd.Parameters.AddWithValue("@IdDoctor",  doctorId);
         cmd.Parameters.AddWithValue("@AppointmentDate", appointmentDate);
-        cmd.Parameters.AddWithValue("@ExcludeId", excludeAppointmentId);
+        cmd.Parameters.AddWithValue("@ExcludeId", (object?)excludeAppointmentId ?? DBNull.Value);
         var result =  (int)await cmd.ExecuteScalarAsync();
         return result > 0;
         
