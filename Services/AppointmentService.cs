@@ -52,7 +52,7 @@ public class AppointmentService : IAppointmentService
         return appointments;
     }
 
-    public async Task<AppointmentDetailsDto> GetAppointmentById(int idAppointment)
+    public async Task<AppointmentDetailsDto> GetAppointmentDetails(int idAppointment)
     {
         await using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
@@ -132,7 +132,7 @@ public class AppointmentService : IAppointmentService
         return (int)await command.ExecuteScalarAsync();
     }
 
-    public async Task UpdateAppointment(int idAppointment, UpdateAppointmentRequestDto request)
+    public async Task<int> UpdateAppointment(int idAppointment, UpdateAppointmentRequestDto request)
     {
         var statuses = new[] {"Scheduled", "Completed", "Cancelled"};
         if (!statuses.Contains(request.Status))
@@ -191,10 +191,10 @@ public class AppointmentService : IAppointmentService
         updateCommand.Parameters.AddWithValue("@Reason", request.Reason);
         updateCommand.Parameters.AddWithValue("@InternalNotes", (object?)request.InternalNotes ?? DBNull.Value);
         
-        await updateCommand.ExecuteNonQueryAsync();
+        return await updateCommand.ExecuteNonQueryAsync();
     }
 
-    public async Task DeleteAppointment(int idAppointment)
+    public async Task<int> DeleteAppointment(int idAppointment)
     {
         await using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
@@ -220,7 +220,7 @@ public class AppointmentService : IAppointmentService
                           """;
         await using var deleteCommand = new SqlCommand(deleteQuery, connection);
         deleteCommand.Parameters.AddWithValue("@IdAppointment", idAppointment);
-        await deleteCommand.ExecuteNonQueryAsync();
+        return await deleteCommand.ExecuteNonQueryAsync();
     }
 
     private async Task<bool> isPatientActive(SqlConnection connection, int patientId)
