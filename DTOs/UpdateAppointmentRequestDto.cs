@@ -13,5 +13,6 @@ public class UpdateAppointmentRequestDto
     [Required]
     [MaxLength(250)]
     public string Reason { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
     public string? InternalNotes { get; set; } = string.Empty;
 }
